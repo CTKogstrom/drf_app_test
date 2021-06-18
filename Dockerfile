@@ -9,5 +9,7 @@ RUN mkdir /app
 WORKDIR /app
 COPY ./app /app
 
+ENV PATH "$PATH:/home/user/.local/bin"
+
 RUN adduser -D user
 USER user
