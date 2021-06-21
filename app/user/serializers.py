@@ -15,6 +15,21 @@ class UserSerializer(serializers.ModelSerializer):
         """Create a new user with encrypted password and return it"""
         return get_user_model().objects.create_user(**validated_data)
 
+    def update(self, instance, validated_data):
+        """Update a user, setting the password correctly and returning it"""
+        password = validated_data.pop('password', None)
+        user = super().update(instance, validated_data)
+
+        # This is done outside of the update function above because you don't want
+        # this in plain text, so the set_password function is used 
+        # This is why the pop method is used instead of get to remove password from the
+        # dictionary.
+        if password:
+            user.set_password(password)
+            user.save()
+        
+        return user
+
 class AuthTokenSerializer(serializers.Serializer):
     """Serializer for the user authentication object"""
 
