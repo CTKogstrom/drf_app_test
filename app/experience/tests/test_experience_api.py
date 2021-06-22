@@ -1,3 +1,4 @@
+from logging import StreamHandler
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -150,3 +151,43 @@ class PrivateExperienceApiTests(TestCase):
         self.assertEqual(tags.count(), 2)
         self.assertIn(tag1, tags)
         self.assertIn(tag2, tags)
+
+    def test_partial_update_experience(self):
+        """Test updating one field in an experience"""
+        experience = sample_experience(user=self.user)
+        experience.tags.add(sample_tag(user=self.user))
+        new_tag = sample_tag(user=self.user, name='Yolo')
+
+        payload = {'title':'Lesson', 'tags':[new_tag.id]}
+
+        url = detail_url(experience.id)
+        self.client.patch(url, payload)
+
+        experience.refresh_from_db()
+
+        self.assertEqual(experience.title, payload['title'])
+        tags = experience.tags.all()
+        self.assertEqual(len(tags), 1)
+        self.assertEqual(new_tag, tags[0])
+
+    def test_full_update_experience(self):
+        """Test updating an experience with PUT"""
+        experience = sample_experience(user=self.user)
+        experience.tags.add(sample_tag(user=self.user))
+        loc = sample_location(user=self.user)
+        payload = {
+            'title': 'Lessons',
+            'time_minutes': 33,
+            'price': '33.00',
+            'location': loc.id
+        }
+        url = detail_url(experience.id)
+        self.client.put(url, payload)
+
+        experience.refresh_from_db()
+
+        self.assertEqual(experience.title, payload['title'])
+        self.assertEqual(experience.time_minutes, payload['time_minutes'])
+        self.assertEqual(str(experience.price), payload['price'])
+        self.assertEqual(experience.tags.all().count(), 0)
+        
