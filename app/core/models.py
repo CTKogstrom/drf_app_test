@@ -55,10 +55,26 @@ class Location(models.Model):
     name = models.CharField(max_length=255)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=CASCADE
+        on_delete=models.CASCADE
     )
     description = models.TextField()
-    
+
 
     def __str__(self):
         return self.name
+
+class Experience(models.Model):
+    """Experience created by a user"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    title = models.CharField(max_length=255)
+    time_minutes = models.IntegerField()
+    price = models.DecimalField(max_digits=7, decimal_places=2)
+    website = models.CharField(max_length=255, blank=True)
+    location = models.ForeignKey('Location', on_delete=models.CASCADE)
+    tags = models.ManyToManyField('Tag')
+
+    def __str__(self):
+        return self.title

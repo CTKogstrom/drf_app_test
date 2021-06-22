@@ -65,3 +65,17 @@ class ModelTests(TestCase):
         )
 
         self.assertEqual(str(location), location.name)
+
+    def test_experience_str(self):
+        """Test the experience string representation"""
+        user = sample_user()
+        
+        experience = models.Experience.objects.create(
+            user = user,
+            title = 'Tennis Lessons',
+            time_minutes = 2,
+            location = models.Location.objects.create(user=user, name='Online'),
+            price = 0
+        )
+
+        self.assertEqual(str(experience), experience.title)

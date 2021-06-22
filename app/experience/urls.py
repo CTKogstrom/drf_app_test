@@ -5,6 +5,7 @@ from experience import views
 router = DefaultRouter()
 router.register('tags', views.TagViewSet)
 router.register('locations', views.LocationViewSet)
+router.register('experiences', views.ExperienceViewSet)
 
 app_name = 'experience'
 
