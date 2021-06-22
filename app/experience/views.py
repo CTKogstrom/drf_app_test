@@ -7,7 +7,7 @@ from experience import serializers
 
 class BaseExperienceAttrViewSet(viewsets.GenericViewSet, mixins.ListModelMixin,
                                 mixins.CreateModelMixin):
-    """Base Viewset for user owned recipe attributes"""
+    """Base Viewset for user owned experience attributes"""
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -39,7 +39,7 @@ class ExperienceViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """Retrieve the recipes for the authenticated user"""
+        """Retrieve the experiences for the authenticated user"""
         return self.queryset.filter(user=self.request.user).order_by('-id')
     
     def get_serializer_class(self):
@@ -48,4 +48,8 @@ class ExperienceViewSet(viewsets.ModelViewSet):
             return serializers.ExperienceDetailSerializer
         
         return self.serializer_class
+
+    def perform_create(self, serializer):
+        """Create a new experience"""
+        serializer.save(user=self.request.user)
     

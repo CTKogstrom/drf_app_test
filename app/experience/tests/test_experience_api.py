@@ -53,7 +53,7 @@ class PublicExperienceApiTests(TestCase):
 
 
 class PrivateExperienceApiTests(TestCase):
-    """Test authenticated recipe API access"""
+    """Test authenticated experience API access"""
 
     def setUp(self):
         self.client = APIClient()
@@ -95,7 +95,7 @@ class PrivateExperienceApiTests(TestCase):
         self.assertEqual(serializer.data, res.data)
     
     def test_view_experience_detail(self):
-        """Test viewing a recipe detail"""
+        """Test viewing a experience detail"""
         experience = sample_experience(user=self.user)
         experience.tags.add(sample_tag(user=self.user))
 
@@ -106,3 +106,47 @@ class PrivateExperienceApiTests(TestCase):
         serializer = ExperienceDetailSerializer(experience)
 
         self.assertEqual(serializer.data, res.data)
+
+    def test_create_basic_experience(self):
+        """Test creating experiences"""
+        samp_loc = sample_location(user=self.user, name='Dyer Park')
+        
+        payload = {
+            'title': 'Workshop',
+            'time_minutes': 45,
+            'price': '50.00',
+            'location': samp_loc.id
+        }
+
+        res = self.client.post(EXPERIENCE_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        
+        experience = Experience.objects.get(id=res.data['id'])
+        serializer = ExperienceSerializer(experience)
+        for key in payload.keys():
+            self.assertEqual(payload[key], serializer.data[key])
+    
+    def test_create_experience_with_tags(self):
+        """Test creating an experience with tags"""
+        tag1 = sample_tag(user=self.user, name='skill')
+        tag2 = sample_tag(user=self.user, name='Arts')
+        loc1 = sample_location(user=self.user)
+        payload = {
+            'title': 'Workshop',
+            'time_minutes': 45,
+            'price': '20.00',
+            'location': loc1.id,
+            'tags': [tag1.id, tag2.id]
+        }
+
+        res = self.client.post(EXPERIENCE_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        
+        experience = Experience.objects.get(id=res.data['id'])
+        tags = experience.tags.all()
+
+        self.assertEqual(tags.count(), 2)
+        self.assertIn(tag1, tags)
+        self.assertIn(tag2, tags)
