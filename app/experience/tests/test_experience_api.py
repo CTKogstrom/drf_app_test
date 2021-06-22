@@ -3,10 +3,28 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from core.models import Experience, Location
-from experience.serializers import ExperienceSerializer
+from core.models import Experience, Location, Tag
+from experience.serializers import ExperienceSerializer, ExperienceDetailSerializer
 
 EXPERIENCE_URL = reverse('experience:experience-list')
+
+def detail_url(experience_id):
+    """Return experience detail URL"""
+    return reverse('experience:experience-detail', args=[experience_id])
+
+def sample_tag(user, name='Outdoor'):
+    """Craete and return a smaple tag"""
+    return Tag.objects.create(user=user, name=name)
+
+def sample_location(user, **params):
+    """Create a sample location"""
+    defaults = {
+        'name':'Anchorage Park',
+        'description':'Tennis and volleyball'
+    }
+    defaults.update(params)
+    return Location.objects.create(user=user, **defaults)
+
 
 def sample_experience(user, **params):
     """Create and return a sample experience"""
@@ -14,7 +32,7 @@ def sample_experience(user, **params):
         'title': 'Sample Experience',
         'time_minutes': 30,
         'price': 20.00,
-        'location': Location.objects.create(user=user, name='Online', description='Online')
+        'location': sample_location(user=user)
     }
     defaults.update(params)
 
@@ -74,4 +92,17 @@ class PrivateExperienceApiTests(TestCase):
         serializer = ExperienceSerializer(experiences, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), 1)
+        self.assertEqual(serializer.data, res.data)
+    
+    def test_view_experience_detail(self):
+        """Test viewing a recipe detail"""
+        experience = sample_experience(user=self.user)
+        experience.tags.add(sample_tag(user=self.user))
+
+        url = detail_url(experience.id)
+
+        res = self.client.get(url)
+
+        serializer = ExperienceDetailSerializer(experience)
+
         self.assertEqual(serializer.data, res.data)

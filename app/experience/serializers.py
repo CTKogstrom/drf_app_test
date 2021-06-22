@@ -32,3 +32,8 @@ class ExperienceSerializer(serializers.ModelSerializer):
         model = Experience
         fields = ['id', 'title', 'time_minutes', 'price', 'website', 'location', 'tags']
         read_only_field = ['id']
+
+class ExperienceDetailSerializer(ExperienceSerializer):
+    """Serialize an experience detail"""
+    location = LocationSerializer(read_only=True)
+    tags = TagSerializer(many=True, read_only=True)
