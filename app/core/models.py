@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
                                         PermissionsMixin
 from django.conf import settings
+from django.db.models.deletion import CASCADE
 
 class UserManager(BaseUserManager):
 
@@ -45,6 +46,19 @@ class Tag(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
     )
+
+    def __str__(self):
+        return self.name
+
+class Location(models.Model):
+    """Location associated with one or more experiences"""
+    name = models.CharField(max_length=255)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=CASCADE
+    )
+    description = models.TextField()
+    
 
     def __str__(self):
         return self.name
