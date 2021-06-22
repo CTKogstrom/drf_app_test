@@ -65,3 +65,31 @@ class PrivateLocationsApiTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
+
+    def test_create_location_successful(self):
+        """Test create a new ingredient"""
+
+        payload = {
+            'name': 'Anchorage Park',
+            'description': 'Park with tennis and volleyball courts'
+        }
+
+        self.client.post(LOCATIONS_URL, payload)
+
+        exists = Location.objects.filter(
+            user=self.user,
+            name=payload['name']
+        ).exists()
+
+        self.assertTrue(exists)
+
+    def test_create_location_invalid(self):
+        """Test create an invalid location fails"""
+
+        payload = {
+            'name': ''
+        }
+
+        res = self.client.post(LOCATIONS_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
