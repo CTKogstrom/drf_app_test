@@ -2,7 +2,17 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
                                         PermissionsMixin
 from django.conf import settings
-from django.db.models.deletion import CASCADE
+import os
+import uuid
+
+
+def experience_image_file_path(instance, filename):
+    """Generate file path for new experience image"""
+    ext = filename.split('.')[-1]
+    filename = f'{uuid.uuid4()}.{ext}'
+
+    return os.path.join('uploads/experience/', filename)
+
 
 class UserManager(BaseUserManager):
 
@@ -74,6 +84,7 @@ class Experience(models.Model):
     price = models.DecimalField(max_digits=7, decimal_places=2)
     website = models.CharField(max_length=255, blank=True)
     location = models.ForeignKey('Location', on_delete=models.CASCADE)
+    image = models.ImageField(null=True, upload_to=experience_image_file_path)
     tags = models.ManyToManyField('Tag')
 
     def __str__(self):
