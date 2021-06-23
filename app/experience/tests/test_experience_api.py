@@ -200,6 +200,56 @@ class PrivateExperienceApiTests(TestCase):
         self.assertEqual(str(experience.price), payload['price'])
         self.assertEqual(experience.tags.all().count(), 0)
 
+    def test_filter_experiences_by_tags(self):
+        """Test returning experiences with specific tags"""
+        experience1 = sample_experience(user=self.user, title='Tennis')
+        experience2 = sample_experience(user=self.user, title='Pickleball')
+        tag1 = sample_tag(user=self.user, name = 'raquet sport')
+        tag2 = sample_tag(user=self.user, name='Active')
+        experience1.tags.add(tag1)
+        experience2.tags.add(tag2)
+        experience3 = sample_experience(user=self.user, title='PingPong')
+
+        res = self.client.get(
+            EXPERIENCE_URL,
+            {'tags':f'{tag1.id},{tag2.id}'}
+        )
+
+        serializer1 = ExperienceSerializer(experience1)
+        serializer2 = ExperienceSerializer(experience2)
+        serializer3 = ExperienceSerializer(experience3)
+
+        self.assertIn(serializer1.data, res.data)
+        self.assertIn(serializer2.data, res.data)
+        self.assertNotIn(serializer3.data, res.data)
+    
+    def test_filter_recipes_by_location(self):
+        """Test returning experiences with specific location"""
+
+        experience1 = sample_experience(user=self.user, title='Tennis', location=sample_location(user=self.user, name='Russo Park'))
+        experience2 = sample_experience(user=self.user, title='Pickleball', location=sample_location(user=self.user, name='Dyer Park'))
+
+        experience3 = sample_experience(user=self.user, title='pingpong')
+
+        res = self.client.get(
+            EXPERIENCE_URL,
+            {'locations':f'{experience1.location.id},{experience2.location.id}'}
+        )
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+
+        serializer1 = ExperienceSerializer(experience1)
+        serializer2 = ExperienceSerializer(experience2)
+        serializer3 = ExperienceSerializer(experience3)
+
+        self.assertIn(serializer1.data, res.data)
+        self.assertIn(serializer2.data, res.data)
+        self.assertNotIn(serializer3.data, res.data)
+        
+        
+
+        
+
 
 class ExperienceImageUploadTests(TestCase):
 
