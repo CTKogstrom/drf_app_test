@@ -37,3 +37,12 @@ class ExperienceDetailSerializer(ExperienceSerializer):
     """Serialize an experience detail"""
     location = LocationSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
+
+
+class ExperienceImageSerializer(serializers.ModelSerializer):
+    """Serializer for uploading images to experiences"""
+
+    class Meta:
+        model = Experience
+        fields = ['id', 'image']
+        read_only_fields = ['id']

@@ -6,8 +6,17 @@ from rest_framework import status
 from rest_framework.test import APIClient
 from core.models import Experience, Location, Tag
 from experience.serializers import ExperienceSerializer, ExperienceDetailSerializer
+import tempfile
+import os
+from PIL import Image
+
 
 EXPERIENCE_URL = reverse('experience:experience-list')
+
+def image_upload_url(experience_id):
+    """Return URL for experience upload"""
+    return reverse('experience:experience-upload-image', args=[experience_id])
+
 
 def detail_url(experience_id):
     """Return experience detail URL"""
@@ -190,4 +199,40 @@ class PrivateExperienceApiTests(TestCase):
         self.assertEqual(experience.time_minutes, payload['time_minutes'])
         self.assertEqual(str(experience.price), payload['price'])
         self.assertEqual(experience.tags.all().count(), 0)
+
+
+class ExperienceImageUploadTests(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            'test@website.com',
+            'testpass'
+        )
+        self.client.force_authenticate(self.user)
+        self.experience = sample_experience(user=self.user)
+
+    def tearDown(self):
+        self.experience.image.delete()
+
+    def test_upload_image_to_experience(self):
+        """Test uploading an image to an experience"""
+        url = image_upload_url(self.experience.id)
         
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as ntf:
+            img = Image.new("RGB", (10,10))
+            img.save(ntf, format='JPEG')
+            ntf.seek(0)
+            res = self.client.post(url, {'image':ntf}, format='multipart')
+
+        self.experience.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('image', res.data)
+        self.assertTrue(os.path.exists(self.experience.image.path))
+
+    def test_upload_image_bad_request(self):
+        """Test uploading an invalid image"""
+        url = image_upload_url(self.experience.id)
+        res = self.client.post(url, {'image': 'notanimage'}, format='multipart')
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
